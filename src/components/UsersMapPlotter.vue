@@ -21,7 +21,18 @@
         <q-list>
           <q-item-label header>Usuarios</q-item-label>
 
-          <q-item v-for="item in data.items" :key="item.id">
+          <q-item
+            v-for="item in data.items"
+            :key="item.id"
+            @click="follow !== item.id ? (follow = item.id) : (follow = null)"
+            clickable
+          >
+            <q-item-section side>
+              <q-icon name="radio_button_unchecked" v-if="follow !== item.id" />
+
+              <q-icon name="radio_button_checked" v-else />
+            </q-item-section>
+
             <q-item-section>
               <q-item-label>{{ item.username }}</q-item-label>
               <q-item-label caption lines="2">
@@ -58,10 +69,8 @@
       </q-scroll-area>
     </q-drawer>
 
-    <q-page-container>
-      <div class="col-8">
-        <pre>{{ data }}</pre>
-      </div>
+    <q-page-container style="height: calc(100vh - 50px)">
+      <a-map :users="data.items" v-if="data?.items" :follow="follow" />
     </q-page-container>
   </q-layout>
 </template>
@@ -70,17 +79,60 @@
 import { ref } from "vue";
 import { pb } from "../js/Pocketbase";
 
+import AMap from "./AMap.vue";
+
 const data = ref();
+const follow = ref();
 const page = ref(1);
 const perPage = ref(10);
 const loading = ref(false);
 
+function executeSub(e) {
+  if (loading.value === true) return;
+  if (e.action !== "update") return;
+  const { record } = e;
+  const index = data.value.items.findIndex((e) => e.id === record.id);
+  console.log(`Updating ${record.username}`);
+  data.value.items[index] = record;
+}
+
+function subscribe(id) {
+  pb.collection("users").subscribe(id, executeSub);
+}
+
+function unsubscribe(id) {
+  pb.collection("users").unsubscribe(id);
+}
+
+function unsubAll(unsubAll) {
+  if (!data.value?.items?.length) return;
+
+  for (let index = 0; index < data.value.items.length; index++) {
+    const item = data.value.items[index];
+    unsubscribe(item.id);
+  }
+}
+
+function subAll(unsubAll) {
+  if (!data.value?.items?.length) return;
+
+  for (let index = 0; index < data.value.items.length; index++) {
+    const item = data.value.items[index];
+    subscribe(item.id);
+  }
+}
+
 async function load() {
   loading.value = true;
+
+  unsubAll();
+
   try {
     data.value = await pb
       .collection("users")
       .getList(page.value, perPage.value);
+
+    subAll();
   } catch (error) {
     console.error(error);
   }

@@ -3,6 +3,15 @@
     <q-toolbar v-if="authStore?.email">
       <q-toolbar-title>ArCode FleetGeo</q-toolbar-title>
 
+      <q-btn
+        icon="my_location"
+        label="Permitir"
+        flat
+        outlined
+        @click="askPermission"
+        v-if="!permission"
+      />
+
       {{ authStore.email }}
 
       <q-btn flat round dense icon="logout" @click="logout">
@@ -50,6 +59,7 @@
 import { ref } from "vue";
 import { useRouter } from "vue-router";
 import { pb, authed, authStore, clear } from "../js/Pocketbase";
+import { askPermission, permission } from "boot/geo";
 import UsersMapPlotter from "../components/UsersMapPlotter.vue";
 
 const router = useRouter();

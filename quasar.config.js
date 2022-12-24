@@ -10,6 +10,14 @@
 
 const { configure } = require("quasar/wrappers");
 
+let envFile = `${__dirname}/.env`;
+if (process.env.NODE_ENV && process.env.NODE_ENV !== "development") {
+  envFile += `.${process.env.NODE_ENV}`;
+}
+const { parsed } = require("dotenv").config({ path: envFile });
+process.env.VITE_POCKETBASE_URL = process.env.POCKETBASE_URL;
+const env = { ...parsed, ...process.env };
+
 module.exports = configure(function (/* ctx */) {
   return {
     eslint: {
@@ -27,7 +35,7 @@ module.exports = configure(function (/* ctx */) {
     // app boot file (/src/boot)
     // --> boot files are part of "main.js"
     // https://v2.quasar.dev/quasar-cli/boot-files
-    boot: [],
+    boot: ["geo"],
 
     // https://v2.quasar.dev/quasar-cli-vite/quasar-config-js#css
     css: ["app.sass"],
@@ -53,7 +61,7 @@ module.exports = configure(function (/* ctx */) {
         node: "node16",
       },
 
-      vueRouterMode: "hash", // available values: 'hash', 'history'
+      vueRouterMode: "history", // available values: 'hash', 'history'
       // vueRouterBase,
       // vueDevtools,
       // vueOptionsAPI: false,
@@ -62,7 +70,7 @@ module.exports = configure(function (/* ctx */) {
 
       // publicPath: '/',
       // analyze: true,
-      // env: {},
+      env,
       // rawDefine: {}
       // ignorePublicFolder: true,
       // minify: false,
