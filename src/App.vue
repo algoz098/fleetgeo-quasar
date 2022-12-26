@@ -3,10 +3,12 @@
 </template>
 
 <script setup>
-import { useRouter } from "vue-router";
+import { useRouter, useRoute } from "vue-router";
 import { authed } from "./js/Pocketbase";
 
 const router = useRouter();
+const route = useRoute();
 
-if (!authed.value) router.replace({ name: "login" });
+if (!authed.value && route.fullPath.includes("/d"))
+  router.replace({ name: "login" });
 </script>
